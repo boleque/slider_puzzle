@@ -14,7 +14,6 @@ public class Board {
     private int[][] tiles;
     private final int n;
     private int blankSquare;
-    private int moves;
 
     // create a board from an n-by-n array of tiles,
     // where tiles[row][col] = tile at (row, col)
@@ -30,25 +29,8 @@ public class Board {
         }
     }
 
-    public Board(int[][] tiles, int moves) {
-        this.moves = moves;
-        this.n = tiles.length;
-        this.tiles = tiles;
-        for (int i = 0; i < n; i++) {
-            for (int j = 0; j < n; j++) {
-                if (tiles[i][j] == 0) {
-                    blankSquare = to1DimCoord(i, j);
-                }
-            }
-        }
-    }
-
     public int[][] getTiles() {
         return tiles;
-    }
-
-    public int getBlankSquare() {
-        return this.blankSquare;
     }
 
     // string representation of this board
@@ -58,7 +40,7 @@ public class Board {
         ret.append("\n");
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < n; j++) {
-                ret.append("\s");
+                ret.append(" ");
                 ret.append(tiles[i][j]);
             }
             ret.append("\n");
@@ -71,6 +53,9 @@ public class Board {
     }
 
     private int[] to2DimCoord(int value) {
+        if (value == 0) {
+            return new int[] {0, 0};
+        }
         int row = value % n == 0 ? (value / n) - 1 : (value / n);
         int col = value - n * row - 1;
         return new int[] {row, col};
@@ -81,7 +66,7 @@ public class Board {
         for(int i = 0; i < n; i++)
             for(int j = 0; j < n; j++)
                 tilesCopy[i][j] = this.tiles[i][j];
-        return new Board(tilesCopy, this.moves);
+        return new Board(tilesCopy);
     }
 
     // board dimension n
@@ -171,6 +156,7 @@ public class Board {
                 // replace blank tile
                 board.tiles[row][col] = board.tiles[row + 1][col];
                 board.tiles[row + 1][col] = 0;
+                board.blankSquare = to1DimCoord(row + 1, col);
                 boards[i++] = board;
             }
             else if (row == n - 1) {
@@ -178,6 +164,7 @@ public class Board {
                 // replace blank tile
                 board.tiles[row][col] = board.tiles[row - 1][col];
                 board.tiles[row - 1][col] = 0;
+                board.blankSquare = to1DimCoord(row - 1, col);
                 boards[i++] = board;
             }
             else {
@@ -185,11 +172,13 @@ public class Board {
                 // replace blank tile
                 boardBottom.tiles[row][col] = boardBottom.tiles[row + 1][col];
                 boardBottom.tiles[row + 1][col] = 0;
+                boardBottom.blankSquare = to1DimCoord(row + 1, col);
                 boards[i++] = boardBottom;
 
                 Board boardTop = copy();
                 boardTop.tiles[row][col] = boardTop.tiles[row - 1][col];
                 boardTop.tiles[row - 1][col] = 0;
+                boardTop.blankSquare = to1DimCoord(row - 1, col);
                 boards[i++] = boardTop;
             }
             //
@@ -198,6 +187,7 @@ public class Board {
                 // replace blank tile
                 board.tiles[row][col] = board.tiles[row][col + 1];
                 board.tiles[row][col + 1] = 0;
+                board.blankSquare = to1DimCoord(row, col + 1);
                 boards[i++] = board;
             }
             else if (col == n - 1) {
@@ -205,6 +195,7 @@ public class Board {
                 // replace blank tile
                 board.tiles[row][col] = board.tiles[row][col - 1];
                 board.tiles[row][col - 1] = 0;
+                board.blankSquare = to1DimCoord(row, col - 1);
                 boards[i++] = board;
             }
             else {
@@ -212,11 +203,13 @@ public class Board {
                 // replace blank tile
                 boardRight.tiles[row][col] = boardRight.tiles[row][col + 1];
                 boardRight.tiles[row][col + 1] = 0;
+                boardRight.blankSquare = to1DimCoord(row, col + 1);
                 boards[i++] = boardRight;
 
                 Board boardLeft = copy();
                 boardLeft.tiles[row][col] = boardLeft.tiles[row][col - 1];
                 boardLeft.tiles[row][col - 1] = 0;
+                boardLeft.blankSquare = to1DimCoord(row, col - 1);
                 boards[i++] = boardLeft;
             }
         }
