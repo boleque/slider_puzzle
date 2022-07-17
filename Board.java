@@ -14,6 +14,7 @@ public class Board {
     private int[][] tiles;
     private final int n;
     private int blankSquare;
+    private int moves;
 
     // create a board from an n-by-n array of tiles,
     // where tiles[row][col] = tile at (row, col)
@@ -27,6 +28,27 @@ public class Board {
                 }
             }
         }
+    }
+
+    public Board(int[][] tiles, int moves) {
+        this.moves = moves;
+        this.n = tiles.length;
+        this.tiles = tiles;
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < n; j++) {
+                if (tiles[i][j] == 0) {
+                    blankSquare = to1DimCoord(i, j);
+                }
+            }
+        }
+    }
+
+    public int[][] getTiles() {
+        return tiles;
+    }
+
+    public int getBlankSquare() {
+        return this.blankSquare;
     }
 
     // string representation of this board
@@ -58,8 +80,8 @@ public class Board {
         int[][] tilesCopy = new int[n][n];
         for(int i = 0; i < n; i++)
             for(int j = 0; j < n; j++)
-                tilesCopy[i][j] = tiles[i][j];
-        return new Board(tilesCopy);
+                tilesCopy[i][j] = this.tiles[i][j];
+        return new Board(tilesCopy, this.moves);
     }
 
     // board dimension n
