@@ -4,33 +4,38 @@
  *  Last modified:     October 16, 1842
  **************************************************************************** */
 
-import edu.princeton.cs.algs4.StdRandom;
+import java.util.Arrays;
+import java.util.LinkedList;
 
-import java.util.Iterator;
-import java.util.NoSuchElementException;
+public final class Board {
 
-public class Board {
-
-    private int[][] tiles;
     private final int n;
-    private int blankSquare;
+    private final int[][] tiles;
 
     // create a board from an n-by-n array of tiles,
     // where tiles[row][col] = tile at (row, col)
     public Board(int[][] tiles) {
         this.n = tiles.length;
-        this.tiles = tiles;
-        for (int i = 0; i < n; i++) {
-            for (int j = 0; j < n; j++) {
-                if (tiles[i][j] == 0) {
-                    blankSquare = to1DimCoord(i, j);
-                }
+        this.tiles = new int[n][n];
+        for(int i = 0; i < n; i++) {
+            for(int j = 0; j < n; j++) {
+                this.tiles[i][j] = tiles[i][j];
             }
         }
     }
 
-    public int[][] getTiles() {
-        return tiles;
+    private Board copyWithSwappedTiles(int i0, int j0, int i1, int j1) {
+        int[][] newTiles = new int[n][n];
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < n; j++) {
+                newTiles[i][j] = tiles[i][j];
+            }
+        }
+        // swap
+        int tmp = newTiles[i0][j0];
+        newTiles[i0][j0] = newTiles[i1][j1];
+        newTiles[i1][j1] = tmp;
+        return new Board(newTiles);
     }
 
     // string representation of this board
@@ -61,12 +66,17 @@ public class Board {
         return new int[] {row, col};
     }
 
-    private Board copy() {
-        int[][] tilesCopy = new int[n][n];
-        for(int i = 0; i < n; i++)
-            for(int j = 0; j < n; j++)
-                tilesCopy[i][j] = this.tiles[i][j];
-        return new Board(tilesCopy);
+    private int[] getBlankTileCoord() {
+        int[] blankTile = new int[2];
+        for(int i = 0; i < n; i++) {
+            for(int j = 0; j < n; j++) {
+                if (tiles[i][j] == 0) {
+                    blankTile[0] = i;
+                    blankTile[1] = j;
+                }
+            }
+        }
+        return blankTile;
     }
 
     // board dimension n
@@ -116,175 +126,76 @@ public class Board {
 
     // is this board the goal board?
     public boolean isGoal() {
-        return hamming() == 0 && manhattan() == 0;
+        return manhattan() == 0;
     }
 
     // does this board equal y?
-    public boolean equals(Object y) {
-        Board yBoard = (Board) y;
-        if (this.n != yBoard.n) return false;
-        for (int i = 0; i < n; i++) {
-            for (int j = 0; j < n; j++) {
-                if (this.tiles[i][j] != yBoard.tiles[i][j]) {
-                    return false;
-                }
-            }
-        }
-        return true;
+    public boolean equals(Object other) {
+        if (this == other) return true;
+        if (!(other instanceof Board)) return false;
+        Board otherBoard = (Board) other;
+        return (this.n == otherBoard.n) && Arrays.deepEquals(tiles, otherBoard.tiles);
     }
 
     // all neighboring boards
     public Iterable<Board> neighbors() {
-        return new Iterable<Board>() {
-            public Iterator<Board> iterator() {
-                return new BoardIterator();
-            }
-        };
-    }
-
-    private class BoardIterator implements Iterator<Board> {
-        private int i;
-        private Board[] boards;
-
-        public BoardIterator() {
-            int[] coords = to2DimCoord(blankSquare);
-            int row = coords[0];
-            int col = coords[1];
-            boards = new Board[4];
-            if (row == 0) {
-                Board board = copy();
-                // replace blank tile
-                board.tiles[row][col] = board.tiles[row + 1][col];
-                board.tiles[row + 1][col] = 0;
-                board.blankSquare = to1DimCoord(row + 1, col);
-                boards[i++] = board;
-            }
-            else if (row == n - 1) {
-                Board board = copy();
-                // replace blank tile
-                board.tiles[row][col] = board.tiles[row - 1][col];
-                board.tiles[row - 1][col] = 0;
-                board.blankSquare = to1DimCoord(row - 1, col);
-                boards[i++] = board;
-            }
-            else {
-                Board boardBottom = copy();
-                // replace blank tile
-                boardBottom.tiles[row][col] = boardBottom.tiles[row + 1][col];
-                boardBottom.tiles[row + 1][col] = 0;
-                boardBottom.blankSquare = to1DimCoord(row + 1, col);
-                boards[i++] = boardBottom;
-
-                Board boardTop = copy();
-                boardTop.tiles[row][col] = boardTop.tiles[row - 1][col];
-                boardTop.tiles[row - 1][col] = 0;
-                boardTop.blankSquare = to1DimCoord(row - 1, col);
-                boards[i++] = boardTop;
-            }
-            //
-            if (col == 0) {
-                Board board = copy();
-                // replace blank tile
-                board.tiles[row][col] = board.tiles[row][col + 1];
-                board.tiles[row][col + 1] = 0;
-                board.blankSquare = to1DimCoord(row, col + 1);
-                boards[i++] = board;
-            }
-            else if (col == n - 1) {
-                Board board = copy();
-                // replace blank tile
-                board.tiles[row][col] = board.tiles[row][col - 1];
-                board.tiles[row][col - 1] = 0;
-                board.blankSquare = to1DimCoord(row, col - 1);
-                boards[i++] = board;
-            }
-            else {
-                Board boardRight = copy();
-                // replace blank tile
-                boardRight.tiles[row][col] = boardRight.tiles[row][col + 1];
-                boardRight.tiles[row][col + 1] = 0;
-                boardRight.blankSquare = to1DimCoord(row, col + 1);
-                boards[i++] = boardRight;
-
-                Board boardLeft = copy();
-                boardLeft.tiles[row][col] = boardLeft.tiles[row][col - 1];
-                boardLeft.tiles[row][col - 1] = 0;
-                boardLeft.blankSquare = to1DimCoord(row, col - 1);
-                boards[i++] = boardLeft;
-            }
+        LinkedList<Board> neighbors = new LinkedList<>();
+        int[] blankTile = getBlankTileCoord();
+        int row = blankTile[0];
+        int col = blankTile[1];
+        if (row == 0) {
+            neighbors.add(copyWithSwappedTiles( row, col , row + 1, col));
         }
-
-        public boolean hasNext() {
-            return i > 0;
+        else if (row == n - 1) {
+            neighbors.add(copyWithSwappedTiles(row, col, row - 1, col));
         }
-
-        public void remove() {
-            throw new UnsupportedOperationException();
+        else {
+            neighbors.add(copyWithSwappedTiles(row, col, row + 1, col));
+            neighbors.add(copyWithSwappedTiles(row, col, row - 1, col));
         }
-
-        public Board next() {
-            if (!hasNext()) {
-                throw new NoSuchElementException("Iterator is exhausted");
-            }
-            return boards[--i];
+        if (col == 0) {
+            neighbors.add(copyWithSwappedTiles(row, col, row, col + 1));
         }
-
+        else if (col == n - 1) {
+            neighbors.add(copyWithSwappedTiles(row, col, row, col - 1));
+        }
+        else {
+            neighbors.add(copyWithSwappedTiles(row, col, row, col + 1));
+            neighbors.add(copyWithSwappedTiles(row, col, row, col - 1));
+        }
+        return neighbors;
     }
 
     // a board that is obtained by exchanging any pair of tiles
     public Board twin() {
-        Board board = copy();
-        int value = StdRandom.uniform(n*n - 1);
-        int[] coords = to2DimCoord(value);
-        int row = coords[0];
-        int col = coords[1];
-        int tmp = board.tiles[row][col];
-        boolean changeRow = StdRandom.bernoulli();
-        if (changeRow) {
-            boolean up = false;
-            if (row != 0 && row != n - 1) {
-                up = StdRandom.bernoulli();
-            }
-            else if (row == n - 1) {
-                up = true;
-            }
-            if (up) {
-                board.tiles[row][col] = board.tiles[row - 1][col];
-                board.tiles[row - 1][col] = tmp;
-            }
-            else {
-                board.tiles[row][col] = board.tiles[row + 1][col];
-                board.tiles[row + 1][col] = tmp;
-            }
+        // twin is a board that is obtained by exchanging any pair of tiles
+        // empty square is not a tile.
+        Boolean findFirstTile = false;
+        int i0 = 0, j0 = 0, i1 = 0, j1 = 1;
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < n; j++) {
+                if (tiles[i][j] != 0) {
 
-        }
-        else {
-            boolean left = false;
-            if (col != 0 && col != n - 1) {
-                left = StdRandom.bernoulli();
-            }
-            else if (col == n - 1) {
-                left = true;
-            }
-            if (left) {
-                board.tiles[row][col] = board.tiles[row][col - 1];
-                board.tiles[row][col - 1] = tmp;
-            }
-            else {
-                board.tiles[row][col] = board.tiles[row][col + 1];
-                board.tiles[row][col + 1] = tmp;
+                    if (!findFirstTile) {
+                        i0 = i;
+                        j0 = j;
+                        findFirstTile = true;
+                        continue;
+                    }
+                    i1 = i;
+                    j1 = j;
+                    break;
+                }
             }
         }
-        return board;
+        return copyWithSwappedTiles(i0, j0, i1, j1);
     }
 
     // unit testing (not graded)
     public static void main(String[] args) {
         int[][] tiles = {
-                {1, 2, 3, 4},
-                {5, 6, 7, 8},
-                {9, 10, 11, 12},
-                {13, 14, 15, 0}
+                {0, 2},
+                {1, 3}
         };
         Board board = new Board(tiles);
         System.out.println("Original: " + board);
